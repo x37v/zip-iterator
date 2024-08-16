@@ -89,6 +89,7 @@ private:
     Iters m_iters;
 };
 
+
 template <typename ... T>
 class zipper
 {
@@ -103,19 +104,23 @@ public:
 
     auto begin() -> zip_type
     {
-        return std::apply([](auto && ... args){ 
-                return zip_type(std::make_tuple(std::begin(args)...)); 
-            }, m_args);
+        return std::apply(zipper<T...>::map_begin, m_args);
     }
     auto end() -> zip_type
     {
-        return std::apply([](auto && ... args){ 
-                return zip_type(std::make_tuple(std::end(args)...)); 
-            }, m_args);
+        return std::apply(zipper<T...>::map_end, m_args);
     }
 
 private:
     std::tuple<T ...> m_args;
+
+    static zip_type map_begin(T && ... args){ 
+      return zip_type(std::make_tuple(std::begin(args)...)); 
+    }
+
+    static zip_type map_end(T && ... args){ 
+      return zip_type(std::make_tuple(std::end(args)...)); 
+    }
 };
 
 
