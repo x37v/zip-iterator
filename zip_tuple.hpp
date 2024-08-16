@@ -10,6 +10,12 @@
 
 namespace c9 {
 
+  template <typename T>
+    using select_iterator_for = std::conditional_t<
+    std::is_const_v<std::remove_reference_t<T>>,
+    typename std::remove_reference_t<T>::const_iterator,
+    typename std::remove_reference_t<T>::iterator>;
+
 template <typename Iter>
 using select_access_type_for = std::conditional_t<
     std::is_same_v<Iter, std::vector<bool>::iterator> ||
@@ -17,6 +23,14 @@ using select_access_type_for = std::conditional_t<
     typename Iter::value_type,
     typename Iter::reference
 >;
+
+  /*
+  template <typename T, typename Iter>
+    using select_access_type_for = std::conditional_t<
+    std::is_same_v<Iter, typename T::iterator>,
+    typename T::reference,
+    typename T::const_reference>;
+    */
 
 
 template <typename ... Args, std::size_t ... Index>
@@ -90,16 +104,6 @@ private:
     std::tuple<Iters...> m_iters;
 };
 
-
-/* std::decay needed because T is a reference, and is not a complete type */
-template <typename T>
-using select_iterator_for = std::conditional_t<
-    std::is_const_v<std::remove_reference_t<T>>, 
-    typename std::decay_t<T>::const_iterator,
-    typename std::decay_t<T>::iterator>;
-
-
-
 template <typename ... T>
 class zipper
 {
@@ -127,7 +131,6 @@ public:
 
 private:
     std::tuple<T ...> m_args;
-
 };
 
 
