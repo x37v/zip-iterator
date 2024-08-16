@@ -12,8 +12,8 @@
 
 auto main() -> int 
 {
-    auto a = std::vector<int>{1, 2, 3, 4, 5, 6};
-    auto b = std::vector<int>{1, 2, 3, 4, 5, 6, 7};
+    auto a = std::array<int, 6>{1, 2, 3, 4, 5, 6};
+    const auto b = std::vector<int>{1, 2, 3, 4, 5, 6, 7};
     auto c = std::vector<int>{0, 0, 0, 0, 0};
     auto const & d = b;
 

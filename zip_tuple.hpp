@@ -16,22 +16,11 @@ namespace c9 {
     typename std::remove_reference_t<T>::const_iterator,
     typename std::remove_reference_t<T>::iterator>;
 
-template <typename Iter>
+template <typename T>
 using select_access_type_for = std::conditional_t<
-    std::is_same_v<Iter, std::vector<bool>::iterator> ||
-    std::is_same_v<Iter, std::vector<bool>::const_iterator>,
-    typename Iter::value_type,
-    typename Iter::reference
->;
-
-  /*
-  template <typename T, typename Iter>
-    using select_access_type_for = std::conditional_t<
-    std::is_same_v<Iter, typename T::iterator>,
-    typename T::reference,
-    typename T::const_reference>;
-    */
-
+    std::is_const_v<std::remove_reference_t<T>>,
+    typename std::remove_reference_t<T>::const_reference,
+    typename std::remove_reference_t<T>::reference>;
 
 template <typename ... Args, std::size_t ... Index>
 auto any_match_impl(std::tuple<Args...> const & lhs,
@@ -51,21 +40,17 @@ auto any_match(std::tuple<Args...> const & lhs, std::tuple<Args...> const & rhs)
     return any_match_impl(lhs, rhs, std::index_sequence_for<Args...>{});
 }
 
-
-
-template <typename ... Iters>
+template <typename ... T>
 class zip_iterator
 {
 public:
-
-    using value_type = std::tuple<
-        select_access_type_for<Iters>...
-    >;
+    using value_type = std::tuple<select_access_type_for<T>...>;
+    using Iters = std::tuple<select_iterator_for<T>...>;
 
     zip_iterator() = delete;
 
-    zip_iterator(Iters && ... iters)
-        : m_iters {std::forward<Iters>(iters)...}
+    zip_iterator(Iters && iters)
+        : m_iters {std::forward<Iters>(iters)}
     {
     }
 
@@ -101,14 +86,14 @@ public:
     }
 
 private:
-    std::tuple<Iters...> m_iters;
+    Iters m_iters;
 };
 
 template <typename ... T>
 class zipper
 {
 public:
-    using zip_type = zip_iterator<select_iterator_for<T> ...>;
+    using zip_type = zip_iterator<T ...>;
 
     template <typename ... Args>
     zipper(Args && ... args)
@@ -119,13 +104,13 @@ public:
     auto begin() -> zip_type
     {
         return std::apply([](auto && ... args){ 
-                return zip_type(std::begin(args)...); 
+                return zip_type(std::make_tuple(std::begin(args)...)); 
             }, m_args);
     }
     auto end() -> zip_type
     {
         return std::apply([](auto && ... args){ 
-                return zip_type(std::end(args)...); 
+                return zip_type(std::make_tuple(std::end(args)...)); 
             }, m_args);
     }
 
