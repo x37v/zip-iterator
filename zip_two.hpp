@@ -8,30 +8,32 @@
 
 namespace c9 {
 
-/*  This is an example of how you can change the access type for a given type. 
-    Because are example  uses std::vector, and std::vector has a specialisation
-    for `bool` that returns a special iterator that can only be dereferenced by
-    value, then we need to make sure that, in that case, a value type is 
-    returned rather than a reference. */
-template <typename Iter>
-using select_access_type_for = std::conditional_t<
-    std::is_same_v<Iter, std::vector<bool>::iterator> ||
-    std::is_same_v<Iter, std::vector<bool>::const_iterator>,
-    typename Iter::value_type,
-    typename Iter::reference
->;
+  template <typename T>
+    using select_iterator_for = std::conditional_t<
+    std::is_const_v<T>,
+    typename T::const_iterator,
+    typename T::iterator>;
+
+  template <typename T, typename Iter>
+    using select_access_type_for = std::conditional_t<
+    std::is_same_v<Iter, typename T::iterator>,
+    typename T::reference,
+    typename T::const_reference>;
 
 
 /*  This is an iterator-like object. It's not really a proper iterator, but
     it does satisfy the requirements needed for range-for. */
-template <typename Iter1, typename Iter2>
+template <typename T1, typename T2>
 class zip_iterator
 {
 public:
 
+    using Iter1 = select_iterator_for<T1>;
+    using Iter2 = select_iterator_for<T2>;
+
     using value_type = std::pair<
-        select_access_type_for<Iter1>,
-        select_access_type_for<Iter2>
+        select_access_type_for<T1, Iter1>,
+        select_access_type_for<T2, Iter2>
     >;
 
     zip_iterator() = delete;
@@ -88,20 +90,6 @@ private:
     Iter2 m_iter_2_begin;
 };
 
-
-/*  We need to select the correct iterator for the passed in types. If one of
-    the types is a `std::vector<int> const &` then we need to make sure we use
-    it's `const_iterator, rather than the normal iterator.
-    std::decay is needed because T is a reference, and is not a complete type.
-    Using decay will give us the fundamental type and allows to access it's type
-    definitions */
-template <typename T>
-using select_iterator_for = std::conditional_t<
-    std::is_const_v<std::remove_reference_t<T>>, 
-    typename std::decay_t<T>::const_iterator,
-    typename std::decay_t<T>::iterator>;
-
-
 /*  Class that is called upon to do the zipping. It contains the necessary
     functions to satisfy range-for, by providing both begin and end functions.
 */
@@ -109,14 +97,9 @@ template <typename T, typename U>
 class zipper
 {
 public:
+    using zip_type = zip_iterator<typename std::remove_reference_t<T>, typename std::remove_reference_t<U>>;
 
-    using Iter1 = select_iterator_for<T>;
-    using Iter2 = select_iterator_for<U>;
-
-    using zip_type = zip_iterator<Iter1, Iter2>;
-
-    template <typename V, typename W>
-    zipper(V && a, W && b)
+    zipper(T && a, U && b)
         : m_a{a}
         , m_b{b}
     {
@@ -132,8 +115,8 @@ public:
     }
 
 private:
-    T m_a;
-    U m_b;
+    T&& m_a;
+    U&& m_b;
 };
 
 
