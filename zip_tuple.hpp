@@ -60,14 +60,12 @@ public:
         return *this;
     }
 
-    /*
     auto operator++(int) -> zip_iterator 
     {
         auto tmp = *this;
         ++*this;
         return tmp;
     }
-    */
 
     auto operator!=(zip_iterator const & other) const
     {
