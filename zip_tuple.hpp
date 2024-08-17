@@ -56,16 +56,18 @@ public:
 
     auto operator++() -> zip_iterator& 
     {
-        std::apply([](auto && ... args){ ((args += 1), ...); }, m_iters);
+        std::apply(zip_iterator<T...>::inc_iters, m_iters);
         return *this;
     }
 
+    /*
     auto operator++(int) -> zip_iterator 
     {
         auto tmp = *this;
         ++*this;
         return tmp;
     }
+    */
 
     auto operator!=(zip_iterator const & other) const
     {
@@ -74,19 +76,24 @@ public:
 
     auto operator==(zip_iterator const & other) const
     {
-        auto result = false;
         return any_match(m_iters, other.m_iters);
     }
 
     auto operator*() -> value_type
     {
-        return std::apply([](auto && ... args){ 
-                return value_type(*args...); 
-            }, m_iters);
+        return std::apply(zip_iterator<T...>::map_value, m_iters);
     }
 
 private:
     Iters m_iters;
+
+    static void inc_iters(select_iterator_for<T>& ... args){ 
+      ((args += 1), ...);
+    }
+
+    static value_type map_value(select_iterator_for<T>& ... args){ 
+      return value_type(*args...);
+    }
 };
 
 
