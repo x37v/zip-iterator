@@ -1,12 +1,4 @@
-#include <cassert>
 #include <functional>
-#include <iomanip>
-#include <iostream>
-#include <list>
-#include <string>
-#include <vector>
-#include <typeinfo>
-
 
 namespace c9 {
 
