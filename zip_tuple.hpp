@@ -78,7 +78,7 @@ private:
     Iters m_iters;
 
     static void inc_iters(select_iterator_for<T>& ... args){ 
-      ((args += 1), ...);
+      ((args++), ...);
     }
 
     static value_type map_value(select_iterator_for<T>& ... args){ 
